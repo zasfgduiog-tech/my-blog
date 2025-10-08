@@ -1,0 +1,28 @@
+
+services:
+  db:
+    image: mysql:8.0  # 1. 使用明确的版本号，而不是 latest
+    container_name: my-mysql-db # (可选) 给容器起一个固定的名字，方便管理
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: YourStrongRootPassword123! # 2. 使用一个更安全的 root 密码
+      MYSQL_DATABASE: my_blog_db # 3. 自动创建一个名为 my_blog_db 的数据库
+      MYSQL_USER: blog_user # 4. 创建一个专用的用户
+      MYSQL_PASSWORD: YourStrongUserPassword456! # 5. 为专用用户设置密码
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql # 6. (最重要) 添加数据卷，实现数据持久化
+
+  adminer:
+    image: adminer:4.8.1 # 1. 使用明确的版本号
+    container_name: my-adminer
+    restart: always
+    ports:
+      - "8888:8080"
+    depends_on:
+      - db # 7. 明确指定 adminer 依赖于 db 服务
+
+# (最重要) 在文件末尾定义数据卷
+volumes:
+  mysql_data:
