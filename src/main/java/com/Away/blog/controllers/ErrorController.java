@@ -7,9 +7,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.file.AccessDeniedException;
+
+@CrossOrigin(origins = "*")
 @RestController
 @ControllerAdvice
 @Slf4j
@@ -67,6 +71,16 @@ public class ErrorController {
                 .message(e.getMessage())
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ApiErrorResponse> handleAccessDeniedException(AccessDeniedException e) {
+        log.error("Access denied: {}", e.getMessage());
+        ApiErrorResponse errorResponse = ApiErrorResponse.builder()
+                .status(HttpStatus.FORBIDDEN.value())
+                .message(e.getMessage())
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 }
 

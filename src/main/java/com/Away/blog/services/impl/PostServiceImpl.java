@@ -8,15 +8,16 @@ import com.Away.blog.domain.entity.Post;
 import com.Away.blog.domain.entity.Tag;
 import com.Away.blog.domain.entity.User;
 import com.Away.blog.repositories.PostRepository;
-import com.Away.blog.services.CategoryService;
-import com.Away.blog.services.PostService;
-import com.Away.blog.services.TagService;
+import com.Away.blog.services.*;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.nio.file.AccessDeniedException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -31,6 +32,8 @@ public class PostServiceImpl implements PostService {
     private final CategoryService categoryService;
     private final TagService tagService;
     private static final int WORDS_PER_MINUTE = 300;
+    private final UserService userService;
+
 
     @Override
     public Post getPost(UUID id) {
@@ -38,8 +41,14 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public void deletePost(UUID id) {
+    public void deletePost(UUID id) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User user = userService.findUserByEmail(currentUsername);
         Post post = getPost(id);
+        if (!user.getId().equals(post.getAuthor().getId())) {
+            throw new AccessDeniedException("您没有权限删除这篇文章");
+        }
         postRepository.delete(post);
     }
 
@@ -54,7 +63,7 @@ public class PostServiceImpl implements PostService {
             );
         }
         if (categoryId != null) {
-            Category category = categoryService.findCategoryById(tagId);
+            Category category = categoryService.findCategoryById(categoryId);
             return postRepository.findAllByStatusAndCategory(
                     PostStatus.PUBLISHED, category);
         }
@@ -90,7 +99,14 @@ public class PostServiceImpl implements PostService {
 
     @Override
     @Transactional
-    public Post updatePost(UUID id, UpdatePostRequest updatePostRequest) {
+    public Post updatePost(UUID id, UpdatePostRequest updatePostRequest) throws AccessDeniedException {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String currentUsername = authentication.getName();
+        User currentUser = userService.findUserByEmail(currentUsername);
+        Post post = getPost(id);
+        if (!currentUser.getId().equals(post.getAuthor().getId())) {
+            throw new AccessDeniedException("您没有权限编辑这篇文章");
+        }
         Post existingPost = postRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException("post with id " + id + " not found")
         );
@@ -114,13 +130,35 @@ public class PostServiceImpl implements PostService {
         return postRepository.save(existingPost);
     }
 
-    private Integer calculateReadingTime(String content){
-        if(content == null || content.isEmpty()){
+
+    public static int calculateReadingTime(String content) {
+        if (content == null || content.isEmpty()) {
+            return 0;
+        }
+        // 1. 定义每个字符需要的分钟数（根据平均阅读速度300字/分钟）
+        final int CHARACTERS_PER_MINUTE = WORDS_PER_MINUTE;
+
+        // 2. 去除所有HTML标签，得到纯文本内容
+        String plainText = content.replaceAll("<[^>]*>", "");
+
+        // 2. 去除所有空白字符（包括空格、换行、制表符等），得到纯粹的字符
+        String pureCharacters = plainText.replaceAll("\\s", "");
+
+        // 3. 计算字符数
+        int characterCount = pureCharacters.length();
+
+        if (characterCount == 0) {
             return 0;
         }
 
-        int wordCount = content.trim().split("\\s+").length;
+        // 4. 使用正确的公式进行计算
+        // (double)characterCount 确保了除法是浮点数除法
+        double minutes = (double) characterCount / CHARACTERS_PER_MINUTE;
 
-        return (int)Math.ceil((double)wordCount / WORDS_PER_MINUTE+1);
+        // 5. 向上取整，确保即使只有几个字，也显示为1分钟
+        int readingTime = (int) Math.ceil(minutes);
+
+        // 6. 确保最短阅读时间为1分钟（对于有内容但计算结果小于1的情况）
+        return Math.max(1, readingTime);
     }
 }

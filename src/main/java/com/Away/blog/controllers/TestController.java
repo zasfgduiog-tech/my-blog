@@ -5,6 +5,7 @@ import com.Away.blog.security.BlogUserDetails; // 导入您的 BlogUserDetails �
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,6 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
+@CrossOrigin(origins = "*")
 @RequestMapping("/wang/shine1") // 使用您自己的路径前缀
 public class TestController {
 
@@ -45,6 +47,8 @@ public class TestController {
         Map<String, String> userResponse = new HashMap<>();
         userResponse.put("name", user.getName());
         userResponse.put("email", user.getEmail());
+        userResponse.put("role", user.getRole().name());
+        userResponse.put("id", user.getId().toString());
 
         // 如果能成功返回这个，说明整个认证链路是通畅的！
         return ResponseEntity.ok(userResponse);

@@ -10,9 +10,8 @@ import com.Away.blog.domain.entity.Post;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
-import org.springframework.stereotype.Component;
 
-@Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring",unmappedTargetPolicy = ReportingPolicy.IGNORE,uses={UserMapper.class,TagMapper.class,CategoryMapper.class})
 public interface PostMapper {
     @Mapping(target = "author",source = "author")
     @Mapping(target = "category",source = "category")

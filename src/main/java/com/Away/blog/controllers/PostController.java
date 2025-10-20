@@ -20,9 +20,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.nio.file.AccessDeniedException;
 import java.util.List;
 import java.util.UUID;
 
+@CrossOrigin(origins = "*")
 @RestController
 @RequestMapping(path = {"/wang/shine1/posts"})
 @RequiredArgsConstructor
@@ -64,7 +66,7 @@ public class PostController {
     public ResponseEntity<PostDto> updatePost(
             @PathVariable UUID id,
             @Valid @RequestBody UpdatePostRequestDto updatePostRequestDto
-            ){
+            ) throws AccessDeniedException {
         UpdatePostRequest updatePostRequest = postMapper.updatePostRequest(updatePostRequestDto);
         Post updatePost = postService.updatePost(id, updatePostRequest);
         return ResponseEntity.ok(postMapper.toDto(updatePost));
@@ -82,8 +84,7 @@ public class PostController {
     @DeleteMapping(path = "/{id}")
     public ResponseEntity<Void> deletePost(
             @PathVariable UUID id
-    )
-        {
+    ) throws AccessDeniedException {
         postService.deletePost(id);
         return ResponseEntity.noContent().build();
         }

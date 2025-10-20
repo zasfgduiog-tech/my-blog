@@ -1,5 +1,6 @@
 package com.Away.blog.domain.entity;
 
+import com.Away.blog.domain.Role;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
@@ -33,12 +34,19 @@ public class User {
     @JsonManagedReference
     private List<Post> posts = new ArrayList<>();
 
+    @OneToMany(mappedBy = "author", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    private List<Comment> comments = new ArrayList<>();
 
     @Column(nullable = false)
     private String name;
 
     @Column(nullable = false)
     private LocalDate createdAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 
     @Override
     public boolean equals(Object obj) {
