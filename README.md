@@ -143,8 +143,3 @@ npm run build
 
 qq:2915461184
 ```
-
-
-- **项目结构**: 基于实际的目录组织（config、controllers、domain、repositories、services、security、mappers） [4](#0-3) 
-
-您可以根据实际需求调整数据库配置、端口号、许可证信息和联系方式等内容。
